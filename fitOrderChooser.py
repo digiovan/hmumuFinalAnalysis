@@ -63,7 +63,7 @@ def makePDFBakExpPowMOverSq(name,rooDataset,dimuonMass,minMass,maxMass,workspace
     # order 0 is 1/(m-m0)^2
     # order 1 is e^(p1*m)/(m-m0)^2
     # order 2 is e^(p1*m+p2*m^2)/(m-m0)^2
-    # and so on
+    # and so on and so forth
 
     if order == None:
         if "Jets01PassPtG10BB" in name:
@@ -195,11 +195,10 @@ def makePDFBakExpMOverSqExtd(name,rooDataset,dimuonMass,minMass,maxMass,workspac
 
     channelName = name
 
-    # extra orders
     # order 0 is (e^(p1*m)/(m-m0)) * (1/(m-m0))
     # order 1 is (e^(p1*m)/(m-m0)) * (1/(m-m0) + p1*m)
     # order 2 is (e^(p1*m)/(m-m0)) * (1/(m-m0) + p1*m +p2*m*m)
-    # and so on
+    # and so on and so forth
 
     if order == None:
         if "Jets01PassPtG10BB" in name:
@@ -323,16 +322,52 @@ def makePDFBakExpMOverSqPow(name,rooDataset,dimuonMass,minMass,maxMass,workspace
 
     channelName = name
 
+    # order 0 is e^(p1*m)
+    # order 1 is e^(p1*m)/(m-m0)
+    # order 2 is e^(p1*m)/(m-m0)/(m-m0)
+    # order 3 is e^(p1*m)/(m-m0)/(m-m0)/(m-m0)
+    # and so on and so forth
+
+    if order == None:
+        if "Jets01PassPtG10BB" in name:
+            order = 1
+        elif "Jets01PassPtG10BO" in name:
+            order = 1
+        elif "Jets01PassPtG10BE" in name:
+            order = 1
+        elif "Jets01PassPtG10OO" in name:
+            order = 1
+        elif "Jets01PassPtG10OE" in name:
+            order = 1
+        elif "Jets01PassPtG10EE" in name:
+            order = 1
+        elif "Jets01FailPtG10BB" in name:
+            order = 1
+        elif "Jets01FailPtG10BO" in name:
+            order = 2
+        elif "Jets01FailPtG10BE" in name:
+            order = 1
+        elif "Jets01FailPtG10OO" in name:
+            order = 1
+        elif "Jets01FailPtG10OE" in name:
+            order = 1
+        elif "Jets01FailPtG10EE" in name:
+            order = 1
+        elif "Jet2CutsVBFPass" in name:
+            order = 1
+        elif "Jet2CutsGFPass" in name:
+            order = 1
+        elif "Jet2CutsFailVBFGF" in name:
+            order = 1
+        else:
+            order = 1
+
     InvPolMass = root.RooRealVar(channelName+"_InvPolMass","InvPolMass", 91.187, 30., 105.)
     ExpMass = root.RooRealVar(channelName+"_ExpMass","ExpMass", 0.1, -2., 2.)
   
     #if ('Jet2CutsVBFPass' in name ):
     #  debug += "###  fixing InvPolMass to Z pdg value\n"
     #  InvPolMass.setConstant(True)
-
-    # extra orders
-    if order == None:
-      order = 1
 
     rooParamList = [InvPolMass,ExpMass]
     rooArgList = root.RooArgList(dimuonMass)
