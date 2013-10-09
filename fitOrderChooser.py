@@ -189,7 +189,7 @@ def makePDFBakExpPowMOverSq(name,rooDataset,dimuonMass,minMass,maxMass,workspace
 # Anna-like expansion of the default function  
 def makePDFBakExpMOverSqExtd(name,rooDataset,dimuonMass,minMass,maxMass,workspaceImportFn,dimuonMassZ=None,rooDatasetZ=None,order=None):
     debug = ""
-    debug += "### makePDFBakExpMOverSqPow: "+name+"\n"
+    debug += "### makePDFBakExpMOverSqExtd: "+name+"\n"
     debug += "#    {0:.2f} < {1} < {2:.2f}\n".format(minMass,dimuonMass.GetName(),maxMass)
     debug += "#    {0:.2f} Events in RooDataSet\n".format(rooDataset.sumEntries())
 
@@ -312,6 +312,84 @@ def makePDFBakExpMOverSqExtd(name,rooDataset,dimuonMass,minMass,maxMass,workspac
         print("Gets Bak Norm Assuming Signal region is: {0} GeV, nData=0.0".format(getSidebandString))
 
     return paramList, bakNormTup, debug, order
+
+
+
+def makePDFBakExpMOverSqPow(name,rooDataset,dimuonMass,minMass,maxMass,workspaceImportFn,dimuonMassZ=None,rooDatasetZ=None,order=None):
+    debug = ""
+    debug += "### makePDFBakExpMOverSqPow: "+name+"\n"
+    debug += "#    {0:.2f} < {1} < {2:.2f}\n".format(minMass,dimuonMass.GetName(),maxMass)
+    debug += "#    {0:.2f} Events in RooDataSet\n".format(rooDataset.sumEntries())
+
+    channelName = name
+
+    InvPolMass = root.RooRealVar(channelName+"_InvPolMass","InvPolMass", 91.187, 30., 105.)
+    ExpMass = root.RooRealVar(channelName+"_ExpMass","ExpMass", 0.1, -2., 2.)
+  
+    #if ('Jet2CutsVBFPass' in name ):
+    #  debug += "###  fixing InvPolMass to Z pdg value\n"
+    #  InvPolMass.setConstant(True)
+
+    # extra orders
+    if order == None:
+      order = 1
+
+    rooParamList = [InvPolMass,ExpMass]
+    rooArgList = root.RooArgList(dimuonMass)
+    rooArgList.add(InvPolMass)
+    rooArgList.add(ExpMass)  
+    iParam = 3
+
+
+    pdfDefString = "TMath::Exp(@0*@2)"
+    for i in range(order):
+        pdfDefString += "/(@0-@1)"
+
+    debug += "#    Pow Order: "+str(order)+"\n"
+    debug += "#    pdfDefString: "+pdfDefString+"\n"
+    debug += "#    pdfArgs: "+dimuonMass.GetName()+" "
+    for i in rooParamList:
+        debug += i.GetName()+" "
+    debug += "\n"
+
+    print
+    print "SumPow Order: ",order
+    print "SumPow rooDefString: "+pdfDefString
+    for i in rooParamList:
+        i.Print()
+    print
+    rooArgList.Print()
+    print
+
+    pdfMmumu = root.RooGenericPdf("bak","ExpMOverSqSum plus Powers Order: "+str(order),pdfDefString,rooArgList)
+
+    fr = pdfMmumu.fitTo(rooDataset,root.RooFit.Range("low,high"),root.RooFit.SumW2Error(False),PRINTLEVEL,root.RooFit.Save(True))
+    fr.SetName("bak"+"_fitResult")
+    #chi2 = pdfMmumu.createChi2(rooDataset)
+
+    paramList = [Param(i.GetName(),i.getVal(),i.getError(),i.getError()) for i in rooParamList]
+
+    if workspaceImportFn != None:
+      workspaceImportFn(pdfMmumu)
+      workspaceImportFn(fr)
+
+    #Norm Time
+    bakNormTup = None
+    if False:
+      wholeIntegral = pdfMmumu.createIntegral(root.RooArgSet(dimuonMass),root.RooFit.Range("signal,low,high"))
+      signalIntegral = pdfMmumu.createIntegral(root.RooArgSet(dimuonMass),root.RooFit.Range("signal"))
+      signalRangeList = getRooVarRange(dimuonMass,"signal")
+      getSidebandString = "dimuonMass < {0} || dimuonMass > {1}".format(*signalRangeList)
+      nSideband =  rooDataset.sumEntries(getSidebandString)
+      nData =  rooDataset.sumEntries()
+      bakNormTup = (nSideband,1.0/(1.0-signalIntegral.getVal()/wholeIntegral.getVal()))
+      if nData > 0:
+        print("Gets Bak Norm Assuming Signal region is: {0} GeV, predicted error: {1:.2%} true error: {2:.2%}".format(getSidebandString,1.0/sqrt(bakNormTup[0]),(bakNormTup[0]*bakNormTup[1] - nData)/nData))
+      else:
+        print("Gets Bak Norm Assuming Signal region is: {0} GeV, nData=0.0".format(getSidebandString))
+
+    return paramList, bakNormTup, debug, order
+
 
 
 def makePDFBakBernstein(name,rooDataset,dimuonMass,minMass,maxMass,workspaceImportFn,dimuonMassZ=None,rooDatasetZ=None,order=None):
@@ -1114,6 +1192,9 @@ class OrderStudy:
             nllP1 = tmpDatP1['nll']
             ndfFuncP1 = tmpDatP1['ndfFunc']
             deltaNdfFunc = ndfFuncP1-ndfFunc
+            # protection for a special function
+            if (pdfBaseName == "ExpMOverSqPow"):
+                deltaNdfFunc = 1
             deltaNLL = -2.*(nllP1-nll)
             pDeltaNLL = scipy.stats.chi2.sf(deltaNLL,deltaNdfFunc)
             foundGoodStr = ""
@@ -1155,8 +1236,12 @@ if __name__ == "__main__":
   #pdfsToTry = ["ExpPowMOverSq"]
   #ordersToTry= range(0,5)
 
-  pdfsToTry = ["ExpMOverSqExtd"]
+  #pdfsToTry = ["ExpMOverSqExtd"]
+  #ordersToTry= range(0,5)
+
+  pdfsToTry = ["ExpMOverSqPow"]
   ordersToTry= range(0,5)
+
 
   categories = []
 
