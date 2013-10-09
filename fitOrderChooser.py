@@ -60,7 +60,11 @@ def makePDFBakExpPowMOverSq(name,rooDataset,dimuonMass,minMass,maxMass,workspace
 
     channelName = name
 
-    # extra orders
+    # order 0 is 1/(m-m0)^2
+    # order 1 is e^(p1*m)/(m-m0)^2
+    # order 2 is e^(p1*m+p2*m^2)/(m-m0)^2
+    # and so on
+
     if order == None:
         if "Jets01PassPtG10BB" in name:
             order = 1
@@ -180,6 +184,134 @@ def makePDFBakExpPowMOverSq(name,rooDataset,dimuonMass,minMass,maxMass,workspace
 
     return paramList, bakNormTup, debug, order
 
+
+
+# Anna-like expansion of the default function  
+def makePDFBakExpMOverSqExtd(name,rooDataset,dimuonMass,minMass,maxMass,workspaceImportFn,dimuonMassZ=None,rooDatasetZ=None,order=None):
+    debug = ""
+    debug += "### makePDFBakExpMOverSqPow: "+name+"\n"
+    debug += "#    {0:.2f} < {1} < {2:.2f}\n".format(minMass,dimuonMass.GetName(),maxMass)
+    debug += "#    {0:.2f} Events in RooDataSet\n".format(rooDataset.sumEntries())
+
+    channelName = name
+
+    # extra orders
+    # order 0 is (e^(p1*m)/(m-m0)) * (1/(m-m0))
+    # order 1 is (e^(p1*m)/(m-m0)) * (1/(m-m0) + p1*m)
+    # order 2 is (e^(p1*m)/(m-m0)) * (1/(m-m0) + p1*m +p2*m*m)
+    # and so on
+
+    if order == None:
+        if "Jets01PassPtG10BB" in name:
+            order = 0
+        elif "Jets01PassPtG10BO" in name:
+            order = 1
+        elif "Jets01PassPtG10BE" in name:
+            order = 0
+        elif "Jets01PassPtG10OO" in name:
+            order = 0
+        elif "Jets01PassPtG10OE" in name:
+            order = 0
+        elif "Jets01PassPtG10EE" in name:
+            order = 0
+        elif "Jets01FailPtG10BB" in name:
+            order = 0
+        elif "Jets01FailPtG10BO" in name:
+            order = 0
+        elif "Jets01FailPtG10BE" in name:
+            order = 0
+        elif "Jets01FailPtG10OO" in name:
+            order = 0
+        elif "Jets01FailPtG10OE" in name:
+            order = 0
+        elif "Jets01FailPtG10EE" in name:
+            order = 0
+        elif "Jet2CutsVBFPass" in name:
+            order = 0
+        elif "Jet2CutsGFPass" in name:
+            order = 1
+        elif "Jet2CutsFailVBFGF" in name:
+            order = 0
+        else:
+            order = 0
+
+
+    InvPolMass = root.RooRealVar(channelName+"_InvPolMass","InvPolMass", 91.187, 30., 105.)
+    ExpMass = root.RooRealVar(channelName+"_ExpMass","ExpMass", 0.1, -2., 2.)
+ 
+    #if ('Jet2CutsVBFPass' in name ):
+    #  debug += "###  fixing InvPolMass to Z pdg value\n"
+    #  InvPolMass.setConstant(True)
+
+    rooParamList = [InvPolMass,ExpMass]
+    rooArgList = root.RooArgList(dimuonMass)
+    rooArgList.add(InvPolMass)
+    rooArgList.add(ExpMass)  
+    iParam = 3
+
+
+    pdfDefString = "TMath::Exp(@0*@2)/(@0-@1)*(1/(@0-@1)"
+
+    for ord in range(order):
+      i = ord+1  
+      
+      tmpCoefArg = root.RooRealVar(channelName+"_P"+str(i),"Power Parameter "+str(i), 0.0, -10., 10.)
+      rooArgList.add(tmpCoefArg)
+      rooParamList.append(tmpCoefArg)
+
+      pdfDefString += "+(@"+str(iParam)
+      for j in range(i):
+          pdfDefString += "*@0"
+
+      pdfDefString +=")"
+      iParam += 1
+
+    pdfDefString += ")"
+  
+    debug += "#    Pow Order: "+str(order)+"\n"
+    debug += "#    pdfDefString: "+pdfDefString+"\n"
+    debug += "#    pdfArgs: "+dimuonMass.GetName()+" "
+    for i in rooParamList:
+        debug += i.GetName()+" "
+    debug += "\n"
+
+    print
+    print "SumPow Order: ",order
+    print "SumPow rooDefString: "+pdfDefString
+    for i in rooParamList:
+        i.Print()
+    print
+    rooArgList.Print()
+    print
+
+    pdfMmumu = root.RooGenericPdf("bak","ExpMOverSqSum plus Powers Order: "+str(order),pdfDefString,rooArgList)
+
+    fr = pdfMmumu.fitTo(rooDataset,root.RooFit.Range("low,high"),root.RooFit.SumW2Error(False),PRINTLEVEL,root.RooFit.Save(True))
+    fr.SetName("bak"+"_fitResult")
+    #chi2 = pdfMmumu.createChi2(rooDataset)
+
+    paramList = [Param(i.GetName(),i.getVal(),i.getError(),i.getError()) for i in rooParamList]
+
+    if workspaceImportFn != None:
+      workspaceImportFn(pdfMmumu)
+      workspaceImportFn(fr)
+
+    #Norm Time
+    bakNormTup = None
+    if False:
+      wholeIntegral = pdfMmumu.createIntegral(root.RooArgSet(dimuonMass),root.RooFit.Range("signal,low,high"))
+      signalIntegral = pdfMmumu.createIntegral(root.RooArgSet(dimuonMass),root.RooFit.Range("signal"))
+      signalRangeList = getRooVarRange(dimuonMass,"signal")
+      getSidebandString = "dimuonMass < {0} || dimuonMass > {1}".format(*signalRangeList)
+      nSideband =  rooDataset.sumEntries(getSidebandString)
+      nData =  rooDataset.sumEntries()
+      bakNormTup = (nSideband,1.0/(1.0-signalIntegral.getVal()/wholeIntegral.getVal()))
+      if nData > 0:
+        print("Gets Bak Norm Assuming Signal region is: {0} GeV, predicted error: {1:.2%} true error: {2:.2%}".format(getSidebandString,1.0/sqrt(bakNormTup[0]),(bakNormTup[0]*bakNormTup[1] - nData)/nData))
+      else:
+        print("Gets Bak Norm Assuming Signal region is: {0} GeV, nData=0.0".format(getSidebandString))
+
+    return paramList, bakNormTup, debug, order
 
 
 def makePDFBakBernstein(name,rooDataset,dimuonMass,minMass,maxMass,workspaceImportFn,dimuonMassZ=None,rooDatasetZ=None,order=None):
@@ -1019,7 +1151,11 @@ if __name__ == "__main__":
   #pdfsToTry = ["SumExp","Bernstein"]
   #ordersToTry= range(1,7)
 
-  pdfsToTry = ["ExpPowMOverSq"]
+  # GP's tests
+  #pdfsToTry = ["ExpPowMOverSq"]
+  #ordersToTry= range(0,5)
+
+  pdfsToTry = ["ExpMOverSqExtd"]
   ordersToTry= range(0,5)
 
   categories = []
@@ -1028,9 +1164,9 @@ if __name__ == "__main__":
   jet01PtCuts = " && !(jetLead_pt > 40. && jetSub_pt > 30. && ptMiss < 40.)"
 
   categoriesAll = ["BB","BO","BE","OO","OE","EE"]
-#  categories += [["Jets01PassPtG10BB",  "dimuonPt>10." +jet01PtCuts]]
-#  categories += [["Jets01PassPtG10BO",  "dimuonPt>10." +jet01PtCuts]]
-#  categories += [["Jets01PassPtG10BE",  "dimuonPt>10." +jet01PtCuts]]
+##  categories += [["Jets01PassPtG10BB",  "dimuonPt>10." +jet01PtCuts]]
+##  categories += [["Jets01PassPtG10BO",  "dimuonPt>10." +jet01PtCuts]]
+##  categories += [["Jets01PassPtG10BE",  "dimuonPt>10." +jet01PtCuts]]
   categories += [["Jets01PassPtG10"+x,  "dimuonPt>10." +jet01PtCuts] for x in categoriesAll]
   categories += [["Jets01FailPtG10"+x,"!(dimuonPt>10.)"+jet01PtCuts] for x in categoriesAll]
   categories += [["Jet2CutsVBFPass","deltaEtaJets>3.5 && dijetMass>650."+jet2PtCuts]]
