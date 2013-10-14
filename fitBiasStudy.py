@@ -100,6 +100,9 @@ PDFTITLEMAP = PdfTitleMap({
     "SumExp":"Sum of Exponentials",
     "SumPow":"Sum of Power Functions",
     "Laurent":"Laurent",
+    "ExpPowMOverSq":"e^(p1*m+p2*m^2+...)/(m-m0)^2",
+    "ExpMOverSqExtd":"(e^(p1*m)/(m-m0)) * (1/(m-m0) + p1*m +p2*m*m + ...)",
+    "ExpMOverSqPow":"e^(p1*m)/(m-m0)/(m-m0)/(m-m0)/...",
 })
 
 def runStudy(iJob,iJobGroup,catName,energyStr,truePdfName,pdfAltNameList,dataFileNames,sigMasses,toysPerJob):
@@ -143,13 +146,13 @@ def runStudy(iJob,iJobGroup,catName,energyStr,truePdfName,pdfAltNameList,dataFil
           altPdfOrderList.append(None)
 
       truePdfFunc = None
-      if truePdfNameNoOrder == "Bernstein" or truePdfNameNoOrder == "Chebychev" or truePdfNameNoOrder == "Polynomial" or truePdfNameNoOrder == "SumExp" or truePdfNameNoOrder == "SumPow" or truePdfNameNoOrder == "Laurent":
+      if truePdfNameNoOrder == "Bernstein" or truePdfNameNoOrder == "Chebychev" or truePdfNameNoOrder == "Polynomial" or truePdfNameNoOrder == "SumExp" or truePdfNameNoOrder == "SumPow" or truePdfNameNoOrder == "Laurent" or truePdfNameNoOrder == "ExpPowMOverSq" or truePdfNameNoOrder == "ExpMOverSqExtd" or truePdfNameNoOrder == "ExpMOverSqPow":
         truePdfFunc = getattr(fitOrderChooser,"makePDFBak"+truePdfNameNoOrder)
       else:
         truePdfFunc = getattr(makeCards,"makePDFBak"+truePdfNameNoOrder)
       pdfAltFuncList = []
       for i in altPdfNameNoOrderList:
-        if i == "Bernstein" or i == "Chebychev" or i == "Polynomial" or i == "SumExp" or i == "SumPow" or i == "Laurent":
+        if i == "Bernstein" or i == "Chebychev" or i == "Polynomial" or i == "SumExp" or i == "SumPow" or i == "Laurent" or i == "ExpPowMOverSq" or i == "ExpMOverSqExtd" or i == "ExpMOverSqPow":
           pdfAltFuncList.append(getattr(fitOrderChooser,"makePDFBak"+i))
         else:
           pdfAltFuncList.append(getattr(makeCards,"makePDFBak"+i))
@@ -656,82 +659,82 @@ class BiasStudy:
         canvas.Clear()
 
       ###### Chi2 Prob Plots
-      #for hmass in self.sigMasses:
-      #  hist = root.TH1F("hist"+str(iHist),"",20,0,1)
-      #  setHistTitles(hist,"#chi^{2} p-Value of Fit","N_{Toys}")
-      #  iHist += 1
-      #  for chi2,ndf in zip(self.data[refPdfName][hmass]['chi2True'],self.data[refPdfName][hmass]['ndfTrue']):
-      #      hist.Fill(scipy.stats.chi2.sf(chi2,ndf))
-      #  hist.Draw()
-      #  tlatex.SetTextAlign(12)
-      #  tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
-      #  tlatex.SetTextAlign(12)
-      #  tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
-      #  tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"m_{H} = "+str(hmass)+" GeV/c^{2}")
-      #  tlatex.SetTextAlign(32)
-      #  tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
-      #  self.setYMaxAndDrawVertLines(hist,None)
-      #  canvas.RedrawAxis()
-      #  saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_Chi2_Ref"+refPdfName)
-      #  canvas.Clear()
+      for hmass in self.sigMasses:
+        hist = root.TH1F("hist"+str(iHist),"",20,0,1)
+        setHistTitles(hist,"#chi^{2} p-Value of Fit","N_{Toys}")
+        iHist += 1
+        for chi2,ndf in zip(self.data[refPdfName][hmass]['chi2True'],self.data[refPdfName][hmass]['ndfTrue']):
+            hist.Fill(scipy.stats.chi2.sf(chi2,ndf))
+        hist.Draw()
+        tlatex.SetTextAlign(12)
+        tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
+        tlatex.SetTextAlign(12)
+        tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
+        tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"m_{H} = "+str(hmass)+" GeV/c^{2}")
+        tlatex.SetTextAlign(32)
+        tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
+        self.setYMaxAndDrawVertLines(hist,None)
+        canvas.RedrawAxis()
+        saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_Chi2_Ref"+refPdfName)
+        canvas.Clear()
 
-      #  for pdfAltName in self.pdfAltNamesDict[refPdfName]:
-      #    hist = root.TH1F("hist"+str(iHist),"",20,0,1)
-      #    setHistTitles(hist,"#chi^{2} p-Value of Fit","N_{Toys}")
-      #    iHist += 1
-      #    for chi2,ndf in zip(self.data[refPdfName][hmass][pdfAltName]['chi2'],self.data[refPdfName][hmass][pdfAltName]['ndf']):
-      #      hist.Fill(scipy.stats.chi2.sf(chi2,ndf))
-      #    hist.Draw()
-      #    tlatex.SetTextAlign(12)
-      #    tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
-      #    tlatex.SetTextAlign(12)
-      #    tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
-      #    tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"Alternate PDF: "+PDFTITLEMAP[pdfAltName])
-      #    tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.68,"m_{H} = "+str(hmass)+" GeV/c^{2}")
-      #    tlatex.SetTextAlign(32)
-      #    tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
-      #    self.setYMaxAndDrawVertLines(hist,None)
-      #    canvas.RedrawAxis()
-      #    saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_Chi2_Ref"+refPdfName+"_Alt"+pdfAltName)
-      #    canvas.Clear()
+        for pdfAltName in self.pdfAltNamesDict[refPdfName]:
+          hist = root.TH1F("hist"+str(iHist),"",20,0,1)
+          setHistTitles(hist,"#chi^{2} p-Value of Fit","N_{Toys}")
+          iHist += 1
+          for chi2,ndf in zip(self.data[refPdfName][hmass][pdfAltName]['chi2'],self.data[refPdfName][hmass][pdfAltName]['ndf']):
+            hist.Fill(scipy.stats.chi2.sf(chi2,ndf))
+          hist.Draw()
+          tlatex.SetTextAlign(12)
+          tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
+          tlatex.SetTextAlign(12)
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"Alternate PDF: "+PDFTITLEMAP[pdfAltName])
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.68,"m_{H} = "+str(hmass)+" GeV/c^{2}")
+          tlatex.SetTextAlign(32)
+          tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
+          self.setYMaxAndDrawVertLines(hist,None)
+          canvas.RedrawAxis()
+          saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_Chi2_Ref"+refPdfName+"_Alt"+pdfAltName)
+          canvas.Clear()
 
       ###### Chi2vPull
-      #for hmass in self.sigMasses:
-      #  for pdfAltName in self.pdfAltNamesDict[refPdfName]:
-      #    hist = root.TH2F("hist"+str(iHist),"",12,-2,2,5,0,1)
-      #    setHistTitles(hist,"(N_{sig}(Alt)-N_{sig}(Ref))/#DeltaN_{sig}(Alt)","#chi^{2} p-Value of Fit")
-      #    iHist += 1
-      #    chi2pVals = scipy.stats.chi2.sf(self.data[refPdfName][hmass][pdfAltName]['chi2'],self.data[refPdfName][hmass][pdfAltName]['ndf'])
-      #    for pull,chi2pVal in zip(self.data[refPdfName][hmass][pdfAltName]['pull'],chi2pVals):
-      #      hist.Fill(pull,chi2pVal)
-      #    hist.Draw('col')
-      #    xLine = median(self.data[refPdfName][hmass][pdfAltName]['pull'])
-      #    line = root.TLine()
-      #    line.SetLineColor(root.kBlue)
-      #    line.SetLineWidth(2)
-      #    line.SetLineStyle(2)
-      #    line.DrawLine(xLine,0,xLine,1)
-      #    line.SetLineStyle(1)
-      #    for iY in range(1,hist.GetNbinsY()+1):
-      #      binPullList = []
-      #      binLowVal = hist.GetYaxis().GetBinLowEdge(iY)
-      #      binHighVal = hist.GetYaxis().GetBinUpEdge(iY)
-      #      for iEntry in range(len(self.data[refPdfName][hmass][pdfAltName]['pull'])):
-      #        if chi2pVals[iEntry] >= binLowVal and chi2pVals[iEntry] < binHighVal:
-      #          binPullList.append(self.data[refPdfName][hmass][pdfAltName]['pull'][iEntry])
-      #      binPullMed = median(binPullList)
-      #      line.DrawLine(binPullMed,binLowVal,binPullMed,binHighVal)
-      #    tlatex.SetTextAlign(12)
-      #    tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
-      #    tlatex.SetTextAlign(12)
-      #    tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
-      #    tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"Alternate PDF: "+PDFTITLEMAP[pdfAltName])
-      #    tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.68,"m_{H} = "+str(hmass)+" GeV/c^{2}")
-      #    tlatex.SetTextAlign(32)
-      #    tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
-      #    canvas.RedrawAxis()
-      #    saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_Chi2vPull_Ref"+refPdfName+"_Alt"+pdfAltName)
-      #    canvas.Clear()
+      for hmass in self.sigMasses:
+        for pdfAltName in self.pdfAltNamesDict[refPdfName]:
+          hist = root.TH2F("hist"+str(iHist),"",12,-2,2,5,0,1)
+          setHistTitles(hist,"(N_{sig}(Alt)-N_{sig}(Ref))/#DeltaN_{sig}(Alt)","#chi^{2} p-Value of Fit")
+          iHist += 1
+          chi2pVals = scipy.stats.chi2.sf(self.data[refPdfName][hmass][pdfAltName]['chi2'],self.data[refPdfName][hmass][pdfAltName]['ndf'])
+          for pull,chi2pVal in zip(self.data[refPdfName][hmass][pdfAltName]['pull'],chi2pVals):
+            hist.Fill(pull,chi2pVal)
+          hist.Draw('col')
+          xLine = median(self.data[refPdfName][hmass][pdfAltName]['pull'])
+          line = root.TLine()
+          line.SetLineColor(root.kBlue)
+          line.SetLineWidth(2)
+          line.SetLineStyle(2)
+          line.DrawLine(xLine,0,xLine,1)
+          line.SetLineStyle(1)
+          for iY in range(1,hist.GetNbinsY()+1):
+            binPullList = []
+            binLowVal = hist.GetYaxis().GetBinLowEdge(iY)
+            binHighVal = hist.GetYaxis().GetBinUpEdge(iY)
+            for iEntry in range(len(self.data[refPdfName][hmass][pdfAltName]['pull'])):
+              if chi2pVals[iEntry] >= binLowVal and chi2pVals[iEntry] < binHighVal:
+                binPullList.append(self.data[refPdfName][hmass][pdfAltName]['pull'][iEntry])
+            binPullMed = median(binPullList)
+            line.DrawLine(binPullMed,binLowVal,binPullMed,binHighVal)
+          tlatex.SetTextAlign(12)
+          tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
+          tlatex.SetTextAlign(12)
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"Alternate PDF: "+PDFTITLEMAP[pdfAltName])
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.68,"m_{H} = "+str(hmass)+" GeV/c^{2}")
+          tlatex.SetTextAlign(32)
+          tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
+          canvas.RedrawAxis()
+          saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_Chi2vPull_Ref"+refPdfName+"_Alt"+pdfAltName)
+          canvas.Clear()
 
       ###### PVdeltaNsigAlt
       #for hmass in self.sigMasses:
@@ -970,170 +973,208 @@ class BiasStudy:
     #      saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_deltaNSigAlt_Ref"+refPdfName+"_Alt"+pdfAltName)
     #      canvas.Clear()
 
-    #  ##### Chi2/NDF Plots
-    #  for hmass in self.sigMasses:
-    #    hist = root.TH1F("hist"+str(iHist),"",20,0,2)
-    #    setHistTitles(hist,"#chi^{2}/NDF","N_{Toys}")
-    #    iHist += 1
-    #    for chi2,ndf in zip(self.data[refPdfName][hmass]['chi2True'],self.data[refPdfName][hmass]['ndfTrue']):
-    #        hist.Fill(chi2/ndf)
-    #    hist.Draw()
-    #    tlatex.SetTextAlign(12)
-    #    tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
-    #    tlatex.SetTextAlign(12)
-    #    tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
-    #    tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"m_{H} = "+str(hmass)+" GeV/c^{2}")
-    #    tlatex.SetTextAlign(32)
-    #    tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
-    #    NDF = self.data[refPdfName][hmass]['ndfTrue'][0]
-    #    tmpDat = [i/NDF for i in self.data[refPdfName][hmass]['chi2True']]
-    #    tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.85,"Median: {0:.1f}".format(median(tmpDat)))
-    #    tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.75,"Mean: {0:.1f}".format(mean(tmpDat)))
-    #    tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.65,"#sigma: {0:.1f}".format(stddev(tmpDat)))
-    #    tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.55,"N_{{out of hist}}: {0:.0f}".format(hist.GetBinContent(0)+hist.GetBinContent(hist.GetNbinsX()+1)))
-    #    tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.45,"NDF: {0:.0f}".format(NDF))
-    #    self.setYMaxAndDrawVertLines(hist,None)
-    #    canvas.RedrawAxis()
-    #    saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_Chi2NDF_Ref"+refPdfName)
-    #    canvas.Clear()
+      ##### Chi2/NDF Plots
+      for hmass in self.sigMasses:
+        hist = root.TH1F("hist"+str(iHist),"",20,0,2)
+        setHistTitles(hist,"#chi^{2}/NDF","N_{Toys}")
+        iHist += 1
+        for chi2,ndf in zip(self.data[refPdfName][hmass]['chi2True'],self.data[refPdfName][hmass]['ndfTrue']):
+            hist.Fill(chi2/ndf)
+        hist.Draw()
+        tlatex.SetTextAlign(12)
+        tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
+        tlatex.SetTextAlign(12)
+        tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
+        tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"m_{H} = "+str(hmass)+" GeV/c^{2}")
+        tlatex.SetTextAlign(32)
+        tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
+        NDF = self.data[refPdfName][hmass]['ndfTrue'][0]
+        tmpDat = [i/NDF for i in self.data[refPdfName][hmass]['chi2True']]
+        tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.85,"Median: {0:.1f}".format(median(tmpDat)))
+        tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.75,"Mean: {0:.1f}".format(mean(tmpDat)))
+        tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.65,"#sigma: {0:.1f}".format(stddev(tmpDat)))
+        tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.55,"N_{{out of hist}}: {0:.0f}".format(hist.GetBinContent(0)+hist.GetBinContent(hist.GetNbinsX()+1)))
+        tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.45,"NDF: {0:.0f}".format(NDF))
+        self.setYMaxAndDrawVertLines(hist,None)
+        canvas.RedrawAxis()
+        saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_Chi2NDF_Ref"+refPdfName)
+        canvas.Clear()
 
-    #    for pdfAltName in self.pdfAltNamesDict[refPdfName]:
-    #      hist = root.TH1F("hist"+str(iHist),"",20,0,2)
-    #      setHistTitles(hist,"#chi^{2}/NDF","N_{Toys}")
-    #      iHist += 1
-    #      for chi2,ndf in zip(self.data[refPdfName][hmass][pdfAltName]['chi2'],self.data[refPdfName][hmass][pdfAltName]['ndf']):
-    #        hist.Fill(chi2/ndf)
-    #      hist.Draw()
-    #      tlatex.SetTextAlign(12)
-    #      tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
-    #      tlatex.SetTextAlign(12)
-    #      tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
-    #      tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"Alternate PDF: "+PDFTITLEMAP[pdfAltName])
-    #      tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.68,"m_{H} = "+str(hmass)+" GeV/c^{2}")
-    #      tlatex.SetTextAlign(32)
-    #      tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
-    #      NDF = self.data[refPdfName][hmass][pdfAltName]['ndf'][0]
-    #      tmpDat = [i/NDF for i in self.data[refPdfName][hmass][pdfAltName]['chi2']]
-    #      tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.85,"Median: {0:.1f}".format(median(tmpDat)))
-    #      tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.75,"Mean: {0:.1f}".format(mean(tmpDat)))
-    #      tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.65,"#sigma: {0:.1f}".format(stddev(tmpDat)))
-    #      tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.55,"N_{{out of hist}}: {0:.1f}".format(hist.GetBinContent(0)+hist.GetBinContent(hist.GetNbinsX()+1)))
-    #      tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.45,"NDF: {0:.0f}".format(NDF))
-    #      self.setYMaxAndDrawVertLines(hist,None)
-    #      canvas.RedrawAxis()
-    #      saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_Chi2NDF_Ref"+refPdfName+"_Alt"+pdfAltName)
-    #      canvas.Clear()
+        for pdfAltName in self.pdfAltNamesDict[refPdfName]:
+          hist = root.TH1F("hist"+str(iHist),"",20,0,2)
+          setHistTitles(hist,"#chi^{2}/NDF","N_{Toys}")
+          iHist += 1
+          for chi2,ndf in zip(self.data[refPdfName][hmass][pdfAltName]['chi2'],self.data[refPdfName][hmass][pdfAltName]['ndf']):
+            hist.Fill(chi2/ndf)
+          hist.Draw()
+          tlatex.SetTextAlign(12)
+          tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
+          tlatex.SetTextAlign(12)
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"Alternate PDF: "+PDFTITLEMAP[pdfAltName])
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.68,"m_{H} = "+str(hmass)+" GeV/c^{2}")
+          tlatex.SetTextAlign(32)
+          tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
+          NDF = self.data[refPdfName][hmass][pdfAltName]['ndf'][0]
+          tmpDat = [i/NDF for i in self.data[refPdfName][hmass][pdfAltName]['chi2']]
+          tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.85,"Median: {0:.1f}".format(median(tmpDat)))
+          tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.75,"Mean: {0:.1f}".format(mean(tmpDat)))
+          tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.65,"#sigma: {0:.1f}".format(stddev(tmpDat)))
+          tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.55,"N_{{out of hist}}: {0:.1f}".format(hist.GetBinContent(0)+hist.GetBinContent(hist.GetNbinsX()+1)))
+          tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.45,"NDF: {0:.0f}".format(NDF))
+          self.setYMaxAndDrawVertLines(hist,None)
+          canvas.RedrawAxis()
+          saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_Chi2NDF_Ref"+refPdfName+"_Alt"+pdfAltName)
+          canvas.Clear()
 
-    #  ##### Chi2/NDFvPull
-    #  for hmass in self.sigMasses:
-    #    for pdfAltName in self.pdfAltNamesDict[refPdfName]:
-    #      hist = root.TH2F("hist"+str(iHist),"",12,-2,2,10,0,2)
-    #      setHistTitles(hist,"(N_{sig}(Alt)-N_{sig}(Ref))/#DeltaN_{sig}(Alt)","#chi^{2}/NDF")
-    #      iHist += 1
-    #      NDF = self.data[refPdfName][hmass][pdfAltName]['ndf'][0]
-    #      chi2pVals = [i/NDF for i in self.data[refPdfName][hmass][pdfAltName]['chi2']]
-    #      for pull,chi2pVal in zip(self.data[refPdfName][hmass][pdfAltName]['pull'],chi2pVals):
-    #        hist.Fill(pull,chi2pVal)
-    #      hist.Draw('col')
-    #      xLine = median(self.data[refPdfName][hmass][pdfAltName]['pull'])
-    #      line = root.TLine()
-    #      line.SetLineColor(root.kBlue)
-    #      line.SetLineWidth(2)
-    #      line.SetLineStyle(2)
-    #      line.DrawLine(xLine,0,xLine,1)
-    #      line.SetLineStyle(1)
-    #      for iY in range(1,hist.GetNbinsY()+1):
-    #        binPullList = []
-    #        binLowVal = hist.GetYaxis().GetBinLowEdge(iY)
-    #        binHighVal = hist.GetYaxis().GetBinUpEdge(iY)
-    #        for iEntry in range(len(self.data[refPdfName][hmass][pdfAltName]['pull'])):
-    #          if chi2pVals[iEntry] >= binLowVal and chi2pVals[iEntry] < binHighVal:
-    #            binPullList.append(self.data[refPdfName][hmass][pdfAltName]['pull'][iEntry])
-    #        binPullMed = median(binPullList)
-    #        line.DrawLine(binPullMed,binLowVal,binPullMed,binHighVal)
-    #      tlatex.SetTextAlign(12)
-    #      tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
-    #      tlatex.SetTextAlign(12)
-    #      tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
-    #      tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"Alternate PDF: "+PDFTITLEMAP[pdfAltName])
-    #      tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.68,"m_{H} = "+str(hmass)+" GeV/c^{2}")
-    #      tlatex.SetTextAlign(32)
-    #      tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
-    #      tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.85,"NDF: {0:.0f}".format(NDF))
-    #      canvas.RedrawAxis()
-    #      saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_Chi2NDFvPull_Ref"+refPdfName+"_Alt"+pdfAltName)
-    #      canvas.Clear()
+      ##### Chi2/NDFvPull
+      for hmass in self.sigMasses:
+        for pdfAltName in self.pdfAltNamesDict[refPdfName]:
+          hist = root.TH2F("hist"+str(iHist),"",12,-2,2,10,0,2)
+          setHistTitles(hist,"(N_{sig}(Alt)-N_{sig}(Ref))/#DeltaN_{sig}(Alt)","#chi^{2}/NDF")
+          iHist += 1
+          NDF = self.data[refPdfName][hmass][pdfAltName]['ndf'][0]
+          chi2pVals = [i/NDF for i in self.data[refPdfName][hmass][pdfAltName]['chi2']]
+          for pull,chi2pVal in zip(self.data[refPdfName][hmass][pdfAltName]['pull'],chi2pVals):
+            hist.Fill(pull,chi2pVal)
+          hist.Draw('col')
+          xLine = median(self.data[refPdfName][hmass][pdfAltName]['pull'])
+          line = root.TLine()
+          line.SetLineColor(root.kBlue)
+          line.SetLineWidth(2)
+          line.SetLineStyle(2)
+          line.DrawLine(xLine,0,xLine,1)
+          line.SetLineStyle(1)
+          for iY in range(1,hist.GetNbinsY()+1):
+            binPullList = []
+            binLowVal = hist.GetYaxis().GetBinLowEdge(iY)
+            binHighVal = hist.GetYaxis().GetBinUpEdge(iY)
+            for iEntry in range(len(self.data[refPdfName][hmass][pdfAltName]['pull'])):
+              if chi2pVals[iEntry] >= binLowVal and chi2pVals[iEntry] < binHighVal:
+                binPullList.append(self.data[refPdfName][hmass][pdfAltName]['pull'][iEntry])
+            binPullMed = median(binPullList)
+            line.DrawLine(binPullMed,binLowVal,binPullMed,binHighVal)
+          tlatex.SetTextAlign(12)
+          tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
+          tlatex.SetTextAlign(12)
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"Alternate PDF: "+PDFTITLEMAP[pdfAltName])
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.68,"m_{H} = "+str(hmass)+" GeV/c^{2}")
+          tlatex.SetTextAlign(32)
+          tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
+          tlatex.DrawLatex(0.97-gStyle.GetPadRightMargin(),0.85,"NDF: {0:.0f}".format(NDF))
+          canvas.RedrawAxis()
+          saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_Chi2NDFvPull_Ref"+refPdfName+"_Alt"+pdfAltName)
+          canvas.Clear()
 
-    #  ##### Chi2/NDFvChi2/NDF
-    #  for hmass in self.sigMasses:
-    #    for pdfAltName in self.pdfAltNamesDict[refPdfName]:
-    #      hist = root.TH2F("hist"+str(iHist),"",10,0,2,10,0,2)
-    #      setHistTitles(hist,"Alternate #chi^2/NDF","Reference #chi^{2}/NDF")
-    #      iHist += 1
-    #      NDF = self.data[refPdfName][hmass][pdfAltName]['ndf'][0]
-    #      NDFRef = self.data[refPdfName][hmass]['ndfTrue'][0]
-    #      for chi2Alt,chi2True in zip(self.data[refPdfName][hmass][pdfAltName]['chi2'],self.data[refPdfName][hmass]['chi2True']):
-    #        hist.Fill(chi2Alt/NDF,chi2True/NDFRef)
-    #      hist.Draw('col')
-    #      tlatex.SetTextAlign(12)
-    #      tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
-    #      tlatex.SetTextAlign(12)
-    #      tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
-    #      tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"Alternate PDF: "+PDFTITLEMAP[pdfAltName])
-    #      tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.68,"m_{H} = "+str(hmass)+" GeV/c^{2}")
-    #      tlatex.SetTextAlign(32)
-    #      tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
-    #      canvas.RedrawAxis()
-    #      saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_Chi2NDFvChi2NDF_Ref"+refPdfName+"_Alt"+pdfAltName)
-    #      canvas.Clear()
+      ##### Chi2/NDFvChi2/NDF
+      for hmass in self.sigMasses:
+        for pdfAltName in self.pdfAltNamesDict[refPdfName]:
+          hist = root.TH2F("hist"+str(iHist),"",10,0,2,10,0,2)
+          setHistTitles(hist,"Alternate #chi^2/NDF","Reference #chi^{2}/NDF")
+          iHist += 1
+          NDF = self.data[refPdfName][hmass][pdfAltName]['ndf'][0]
+          NDFRef = self.data[refPdfName][hmass]['ndfTrue'][0]
+          for chi2Alt,chi2True in zip(self.data[refPdfName][hmass][pdfAltName]['chi2'],self.data[refPdfName][hmass]['chi2True']):
+            hist.Fill(chi2Alt/NDF,chi2True/NDFRef)
+          hist.Draw('col')
+          tlatex.SetTextAlign(12)
+          tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
+          tlatex.SetTextAlign(12)
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"Alternate PDF: "+PDFTITLEMAP[pdfAltName])
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.68,"m_{H} = "+str(hmass)+" GeV/c^{2}")
+          tlatex.SetTextAlign(32)
+          tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
+          canvas.RedrawAxis()
+          line = root.TLine(0,0,2,2)
+          line.SetLineColor(1)
+          line.SetLineWidth(3)
+          line.Draw("same")
+          saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_Chi2NDFvChi2NDF_Ref"+refPdfName+"_Alt"+pdfAltName)
+          canvas.Clear()
 
-    #  ##### Chi2ProbvChi2Prob
-    #  for hmass in self.sigMasses:
-    #    for pdfAltName in self.pdfAltNamesDict[refPdfName]:
-    #      hist = root.TH2F("hist"+str(iHist),"",10,0,1,10,0,1)
-    #      setHistTitles(hist,"Alternate #chi^2 p-Value","Reference #chi^{2} p-Value")
-    #      iHist += 1
-    #      NDF = self.data[refPdfName][hmass][pdfAltName]['ndf'][0]
-    #      NDFRef = self.data[refPdfName][hmass]['ndfTrue'][0]
-    #      chi2pVals = [i/NDF for i in self.data[refPdfName][hmass][pdfAltName]['chi2']]
-    #      for chi2Alt,chi2True in zip(self.data[refPdfName][hmass][pdfAltName]['chi2'],self.data[refPdfName][hmass]['chi2True']):
-    #        hist.Fill(
-    #                    scipy.stats.chi2.sf(chi2Alt,NDF),
-    #                    scipy.stats.chi2.sf(chi2True,NDFRef),
-    #                 )
-    #      hist.Draw('col')
-    #      tlatex.SetTextAlign(12)
-    #      tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
-    #      tlatex.SetTextAlign(12)
-    #      tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
-    #      tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"Alternate PDF: "+PDFTITLEMAP[pdfAltName])
-    #      tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.68,"m_{H} = "+str(hmass)+" GeV/c^{2}")
-    #      tlatex.SetTextAlign(32)
-    #      tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
-    #      canvas.RedrawAxis()
-    #      saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_Chi2vChi2_Ref"+refPdfName+"_Alt"+pdfAltName)
-    #      canvas.Clear()
+      ##### Chi2ProbvChi2Prob
+      for hmass in self.sigMasses:
+        for pdfAltName in self.pdfAltNamesDict[refPdfName]:
+          hist = root.TH2F("hist"+str(iHist),"",10,0,1,10,0,1)
+          setHistTitles(hist,"Alternate #chi^2 p-Value","Reference #chi^{2} p-Value")
+          iHist += 1
+          NDF = self.data[refPdfName][hmass][pdfAltName]['ndf'][0]
+          NDFRef = self.data[refPdfName][hmass]['ndfTrue'][0]
+          chi2pVals = [i/NDF for i in self.data[refPdfName][hmass][pdfAltName]['chi2']]
+          for chi2Alt,chi2True in zip(self.data[refPdfName][hmass][pdfAltName]['chi2'],self.data[refPdfName][hmass]['chi2True']):
+            hist.Fill(
+                        scipy.stats.chi2.sf(chi2Alt,NDF),
+                        scipy.stats.chi2.sf(chi2True,NDFRef),
+                     )
+          hist.Draw('col')
+          tlatex.SetTextAlign(12)
+          tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
+          tlatex.SetTextAlign(12)
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"Alternate PDF: "+PDFTITLEMAP[pdfAltName])
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.68,"m_{H} = "+str(hmass)+" GeV/c^{2}")
+          tlatex.SetTextAlign(32)
+          tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
+          canvas.RedrawAxis()
+          line = root.TLine(0,0,1,1)
+          line.SetLineColor(1)
+          line.SetLineWidth(3)
+          line.Draw("same")
+          saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_Chi2vChi2_Ref"+refPdfName+"_Alt"+pdfAltName)
+          canvas.Clear()
 
-    #  ##### NAltvNRef
-    #  for hmass in self.sigMasses:
-    #    for pdfAltName in self.pdfAltNamesDict[refPdfName]:
-    #      hist = root.TH2F("hist"+str(iHist),"",20,-200,200,20,-200,200)
-    #      setHistTitles(hist,"N_{sig}(Ref)","N_{sig}(Alt)")
-    #      iHist += 1
-    #      for nAlt,nRef in zip(self.data[refPdfName][hmass][pdfAltName]['n'],self.data[refPdfName][hmass]['nTrue']):
-    #        hist.Fill(nRef,nAlt)
-    #      hist.Draw('col')
-    #      tlatex.SetTextAlign(12)
-    #      tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
-    #      tlatex.SetTextAlign(12)
-    #      tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
-    #      tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"Alternate PDF: "+PDFTITLEMAP[pdfAltName])
-    #      tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.68,"m_{H} = "+str(hmass)+" GeV/c^{2}")
-    #      tlatex.SetTextAlign(32)
-    #      tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
-    #      canvas.RedrawAxis()
-    #      saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_NAltvNRef_Ref"+refPdfName+"_Alt"+pdfAltName)
-    #      canvas.Clear()
+      ##### NAltvNRef
+      for hmass in self.sigMasses:
+        for pdfAltName in self.pdfAltNamesDict[refPdfName]:
+          hist = root.TH2F("hist"+str(iHist),"",20,-200,200,20,-200,200)
+          setHistTitles(hist,"N_{sig}(Ref)","N_{sig}(Alt)")
+          iHist += 1
+          for nAlt,nRef in zip(self.data[refPdfName][hmass][pdfAltName]['n'],self.data[refPdfName][hmass]['nTrue']):
+            hist.Fill(nRef,nAlt)
+          hist.Draw('col')
+          tlatex.SetTextAlign(12)
+          tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
+          tlatex.SetTextAlign(12)
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"Alternate PDF: "+PDFTITLEMAP[pdfAltName])
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.68,"m_{H} = "+str(hmass)+" GeV/c^{2}")
+          tlatex.SetTextAlign(32)
+          tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
+          canvas.RedrawAxis()
+          line = root.TLine(-200,-200,200,200)
+          line.SetLineColor(1)
+          line.SetLineWidth(3)
+          line.Draw("same")
+          saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_NAltvNRef_Ref"+refPdfName+"_Alt"+pdfAltName)
+          canvas.Clear()
+
+      ##### dNAltvdNRef
+      for hmass in self.sigMasses:
+        for pdfAltName in self.pdfAltNamesDict[refPdfName]:
+          hist = root.TH2F("hist"+str(iHist),"",20,-200,200,20,-200,200)
+          setHistTitles(hist,"#DeltaN_{sig}(Ref)","#DeltaN_{sig}(Alt)")
+          iHist += 1
+          for erralt,errref in zip(self.data[refPdfName][hmass][pdfAltName]['err'],self.data[refPdfName][hmass]['errTrue']):
+            hist.Fill(errref,erralt)
+          hist.Draw('col')
+          tlatex.SetTextAlign(12)
+          tlatex.DrawLatex(gStyle.GetPadLeftMargin(),0.96,PRELIMINARYSTRING)
+          tlatex.SetTextAlign(12)
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.85,"Reference PDF: "+PDFTITLEMAP[refPdfNameOrder])
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.75,"Alternate PDF: "+PDFTITLEMAP[pdfAltName])
+          tlatex.DrawLatex(0.02+gStyle.GetPadLeftMargin(),0.68,"m_{H} = "+str(hmass)+" GeV/c^{2}")
+          tlatex.SetTextAlign(32)
+          tlatex.DrawLatex(0.99-gStyle.GetPadRightMargin(),0.96,caption)
+          canvas.RedrawAxis()
+          line = root.TLine(-200,-200,200,200)
+          line.SetLineColor(1)
+          line.SetLineWidth(3)
+          line.Draw("same")
+          saveAs(canvas,outputPrefix+self.catName+"_"+str(hmass)+"_dNAltvdNRef_Ref"+refPdfName+"_Alt"+pdfAltName)
+          canvas.Clear()
+
 
     #  ##### Chi2 B-Only Prob Plots
     #  for hmass in self.sigMasses:
@@ -1574,8 +1615,11 @@ if __name__ == "__main__":
                         "ExpMOverSq",
                         "Old",
                     ],
-      "Bernstein":[          
-                        "ExpMOverSqP0New",
+      "Bernstein":[
+                        "ExpPowMOverSq",
+                        "ExpMOverSqExtd",
+                        "ExpMOverSqPow",
+                        #"ExpMOverSqP0New",
                         #"ExpMOverSq",
                         #"Old",
                         #"3Bernstein",
@@ -1589,8 +1633,11 @@ if __name__ == "__main__":
                         #"3SumExp",
                         #"4SumExp",
                     ],
-      "SumExp":[          
-                        "ExpMOverSqP0New",
+      "SumExp":[
+                        "ExpPowMOverSq",
+                        "ExpMOverSqExtd",
+                        "ExpMOverSqPow",
+                        #"ExpMOverSqP0New",
                         #"ExpMOverSq",
                         #"Old",
                         #"3Bernstein",

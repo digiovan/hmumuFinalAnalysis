@@ -99,7 +99,8 @@ def makePDFBakExpPowMOverSq(name,rooDataset,dimuonMass,minMass,maxMass,workspace
         else:
             order = 0
 
-
+    order+=2
+    
     InvPolMass = root.RooRealVar(channelName+"_InvPolMass","InvPolMass", 91.187, 30., 105.)
     rooParamList = [InvPolMass]
     rooArgList = root.RooArgList(dimuonMass)
@@ -234,6 +235,7 @@ def makePDFBakExpMOverSqExtd(name,rooDataset,dimuonMass,minMass,maxMass,workspac
         else:
             order = 0
 
+    order+=2
 
     InvPolMass = root.RooRealVar(channelName+"_InvPolMass","InvPolMass", 91.187, 30., 105.)
     ExpMass = root.RooRealVar(channelName+"_ExpMass","ExpMass", 0.1, -2., 2.)
@@ -361,6 +363,8 @@ def makePDFBakExpMOverSqPow(name,rooDataset,dimuonMass,minMass,maxMass,workspace
             order = 1
         else:
             order = 1
+
+    order+=2
 
     InvPolMass = root.RooRealVar(channelName+"_InvPolMass","InvPolMass", 91.187, 30., 105.)
     ExpMass = root.RooRealVar(channelName+"_ExpMass","ExpMass", 0.1, -2., 2.)
