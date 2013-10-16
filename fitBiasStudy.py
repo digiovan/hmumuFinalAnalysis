@@ -100,6 +100,9 @@ PDFTITLEMAP = PdfTitleMap({
     "SumExp":"Sum of Exponentials",
     "SumPow":"Sum of Powers",
     "Laurent":"Laurent",
+    "ExpPowMOverSq":"e^(p1*m+p2*m^2+...)/(m-m0)^2",
+    "ExpMOverSqExtd":"(e^(p1*m)/(m-m0)) * (1/(m-m0) + p1*m +p2*m*m + ...)",
+    "ExpMOverSqPow":"e^(p1*m)/(m-m0)/(m-m0)/(m-m0)/...",
 })
 
 def runStudy(iJob,iJobGroup,catName,energyStr,truePdfName,pdfAltNameList,dataFileNames,sigMasses,fitMassWindow,toysPerJob):
@@ -159,13 +162,15 @@ def runStudy(iJob,iJobGroup,catName,energyStr,truePdfName,pdfAltNameList,dataFil
 
       for hmass in sigMasses:
         truePdfFunc = None
-        if truePdfNameNoOrder == "Bernstein" or truePdfNameNoOrder == "Chebychev" or truePdfNameNoOrder == "Polynomial" or truePdfNameNoOrder == "SumExp" or truePdfNameNoOrder == "SumPow" or truePdfNameNoOrder == "Laurent":
+        #if truePdfNameNoOrder == "Bernstein" or truePdfNameNoOrder == "Chebychev" or truePdfNameNoOrder == "Polynomial" or truePdfNameNoOrder == "SumExp" or truePdfNameNoOrder == "SumPow" or truePdfNameNoOrder == "Laurent":
+        if truePdfNameNoOrder == "Bernstein" or truePdfNameNoOrder == "Chebychev" or truePdfNameNoOrder == "Polynomial" or truePdfNameNoOrder == "SumExp" or truePdfNameNoOrder == "SumPow" or truePdfNameNoOrder == "Laurent" or truePdfNameNoOrder == "ExpPowMOverSq" or truePdfNameNoOrder == "ExpMOverSqExtd" or truePdfNameNoOrder == "ExpMOverSqPow":
           truePdfFunc = getattr(fitOrderChooser,"makePDFBak"+truePdfNameNoOrder)
         else:
           truePdfFunc = getattr(makeCards,"makePDFBak"+truePdfNameNoOrder)
         pdfAltFuncList = []
         for i in altPdfNameNoOrderList:
-          if i == "Bernstein" or i == "Chebychev" or i == "Polynomial" or i == "SumExp" or i == "SumPow" or i == "Laurent":
+          #if i == "Bernstein" or i == "Chebychev" or i == "Polynomial" or i == "SumExp" or i == "SumPow" or i == "Laurent":
+          if i == "Bernstein" or i == "Chebychev" or i == "Polynomial" or i == "SumExp" or i == "SumPow" or i == "Laurent" or i == "ExpPowMOverSq" or i == "ExpMOverSqExtd" or i == "ExpMOverSqPow":
             pdfAltFuncList.append(getattr(fitOrderChooser,"makePDFBak"+i))
           else:
             pdfAltFuncList.append(getattr(makeCards,"makePDFBak"+i))
@@ -1680,9 +1685,9 @@ if __name__ == "__main__":
       #    "MOverSq",
           "Bernstein",
           "SumExp",
-          "SumPow",
+      #    "SumPow",
       #    "Laurent",
-          "Chebychev",
+      #    "Chebychev",
       #    "Polynomial",
   ]
   ###############################################
@@ -1701,34 +1706,37 @@ if __name__ == "__main__":
                         "Old",
                     ],
       "Bernstein":[          
-                        "ExpMOverSq",
+                        "ExpPowMOverSq",
+                        "ExpMOverSqExtd",
                         #"ExpMOverSq",
                         #"Old",
-                        "2Bernstein",
-                        "3Bernstein",
-                        "4Bernstein",
-                        "5Bernstein",
+                        #"2Bernstein",
+                        #"3Bernstein",
+                        #"4Bernstein",
+                        #"5Bernstein",
                         #"6Bernstein",
                         #"7Bernstein",
                         #"8Bernstein",
-                        "1SumExp",
-                        "2SumExp",
+                        #"1SumExp",
+                        #"2SumExp",
                         #"3SumExp",
                         #"4SumExp",
                     ],
       "SumExp":[          
-                        "ExpMOverSq",
+                        "ExpPowMOverSq",
+                        "ExpMOverSqExtd",
+                        #"ExpMOverSq",
                         #"ExpMOverSq",
                         #"Old",
-                        "2Bernstein",
-                        "3Bernstein",
-                        "4Bernstein",
-                        "5Bernstein",
+                        #"2Bernstein",
+                        #"3Bernstein",
+                        #"4Bernstein",
+                        #"5Bernstein",
                         #"6Bernstein",
                         #"7Bernstein",
                         #"8Bernstein",
-                        "1SumExp",
-                        "2SumExp",
+                        #"1SumExp",
+                        #"2SumExp",
                         #"3SumExp",
                         #"4SumExp",
                     ],
@@ -1795,15 +1803,15 @@ if __name__ == "__main__":
   ########################################
   ### Define which categories to run over
 
-  #categories += [["Jets01PassPtG10BB",  "dimuonPt>10." +jet01PtCuts]]
-  #categories += [["Jets01PassPtG10BO",  "dimuonPt>10." +jet01PtCuts]]
-  #categories += [["Jets01PassPtG10BE",  "dimuonPt>10." +jet01PtCuts]]
+  categories += [["Jets01PassPtG10BB",  "dimuonPt>10." +jet01PtCuts]]
+  categories += [["Jets01PassPtG10BO",  "dimuonPt>10." +jet01PtCuts]]
+  categories += [["Jets01PassPtG10BE",  "dimuonPt>10." +jet01PtCuts]]
 
   #categories += [["Jets01PassPtG10"+x,  "dimuonPt>10." +jet01PtCuts] for x in categoriesAll]
   #categories += [["Jets01FailPtG10"+x,"!(dimuonPt>10.)"+jet01PtCuts] for x in categoriesAll]
-  categories += [["Jet2CutsVBFPass","deltaEtaJets>3.5 && dijetMass>650."+jet2PtCuts]]
-  categories += [["Jet2CutsGFPass","!(deltaEtaJets>3.5 && dijetMass>650.) && (dijetMass>250. && dimuonPt>50.)"+jet2PtCuts]]
-  categories += [["Jet2CutsFailVBFGF","!(deltaEtaJets>3.5 && dijetMass>650.) && !(dijetMass>250. && dimuonPt>50.)"+jet2PtCuts]]
+  #categories += [["Jet2CutsVBFPass","deltaEtaJets>3.5 && dijetMass>650."+jet2PtCuts]]
+  #categories += [["Jet2CutsGFPass","!(deltaEtaJets>3.5 && dijetMass>650.) && (dijetMass>250. && dimuonPt>50.)"+jet2PtCuts]]
+  #categories += [["Jet2CutsFailVBFGF","!(deltaEtaJets>3.5 && dijetMass>650.) && !(dijetMass>250. && dimuonPt>50.)"+jet2PtCuts]]
 
   ########################################
   ### Directory and file names
